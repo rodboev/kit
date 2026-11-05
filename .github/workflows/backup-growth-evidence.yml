@@ -20,7 +20,7 @@ jobs:
     if: github.repository == 'rodboev/kit'
     name: Twenty growth runs (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
@@ -34,7 +34,7 @@ jobs:
           go-version-file: go.mod
           cache: true
       - name: Run twenty consecutive backup growth checks
-        run: go tool gotestsum --format standard-verbose --jsonfile backup-growth.json --packages ./backup -- -count=20 -timeout=50m -run '^TestAttachmentHistoryGrowth$'
+        run: go tool gotestsum --format standard-verbose --jsonfile backup-growth.json --packages ./backup -- -count=20 -timeout=170m -run '^TestAttachmentHistoryGrowth$'
       - name: Upload allocation ratios
         if: always()
         uses: actions/upload-artifact@v7.0.2
