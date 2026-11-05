@@ -1,0 +1,44 @@
+name: Backup growth evidence
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-growth-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GOPROXY: https://proxy.golang.org|direct
+  GOFLAGS: -trimpath
+
+jobs:
+  growth:
+    if: github.repository == 'rodboev/kit'
+    name: Twenty growth runs (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run twenty consecutive backup growth checks
+        run: go tool gotestsum --format standard-verbose --jsonfile backup-growth.json --packages ./backup -- -count=20 -timeout=50m -run '^TestAttachmentHistoryGrowth$'
+      - name: Upload allocation ratios
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: backup-growth-${{ matrix.os }}
+          path: backup-growth.json
+          retention-days: 14
